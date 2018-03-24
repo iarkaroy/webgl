@@ -33,6 +33,10 @@ module.exports = {
                         'sass-loader'
                     ]
                 })
+            },
+            {
+                test: /\.(glsl|vs|fs)$/,
+                use: 'raw-loader'
             }
         ]
     }
