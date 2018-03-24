@@ -1,1 +1,1 @@
-Webpack boilerplate setup with ES6, Babel and Sass
+WebGL

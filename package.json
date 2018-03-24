@@ -1,7 +1,7 @@
 {
-  "name": "webpack-babel-es6-sass-boilerplate",
+  "name": "webgl",
   "version": "0.0.1",
-  "description": "Webpack boilerplate setup with ES6, Babel and Sass",
+  "description": "WebGL",
   "main": "index.js",
   "scripts": {
     "watch": "webpack -w",
@@ -11,7 +11,7 @@
   },
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/iarkaroy/webpack-babel-es6-sass-boilerplate.git"
+    "url": "git+https://github.com/iarkaroy/webgl.git"
   },
   "keywords": [
     "webpack",
@@ -26,9 +26,9 @@
   },
   "license": "MIT",
   "bugs": {
-    "url": "https://github.com/iarkaroy/webpack-babel-es6-sass-boilerplate/issues"
+    "url": "https://github.com/iarkaroy/webgl/issues"
   },
-  "homepage": "https://github.com/iarkaroy/webpack-babel-es6-sass-boilerplate#readme",
+  "homepage": "https://github.com/iarkaroy/webgl#readme",
   "browserslist": [
     "> 1%",
     "last 2 versions"
