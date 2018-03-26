@@ -13,8 +13,9 @@ resize();
 var updateProgram = util.program(gl, 'quad.vs', 'update.fs');
 var renderProgram = util.program(gl, 'render.vs', 'render.fs');
 
-var numParticles = 10000;
+var numParticles = 20000;
 var statesize = Math.ceil(Math.sqrt(numParticles));
+var mouse = new Float32Array([-1, -1]);
 
 var positions = [];
 for (var i = 0; i < statesize * statesize; ++i) {
@@ -58,16 +59,20 @@ function loop() {
     requestAnimationFrame(loop);
 
     gl.useProgram(updateProgram);
-    d0.bind(0, updateProgram.u_displacement);
+    p0.bind(0, updateProgram.u_position);
+    d0.bind(1, updateProgram.u_displacement);
     buffer.data(QUAD, updateProgram.a_quad, 2);
+    gl.uniform2fv(updateProgram.u_mouse, mouse);
     fbo.bind(d1);
     gl.viewport(0, 0, statesize, statesize);
     clear();
     gl.drawArrays(gl.TRIANGLE_STRIP, 0, QUAD.length / 2);
 
-    /* var pixels = new Uint8Array(width * height * 4);
-    gl.readPixels(0, 0, width, height, gl.RGBA, gl.UNSIGNED_BYTE, pixels);
-    console.log(pixels); */
+    /*
+    var pixels = new Uint8Array(statesize * statesize * 4);
+    gl.readPixels(0, 0, statesize, statesize, gl.RGBA, gl.UNSIGNED_BYTE, pixels);
+    console.log(pixels);
+    */
 
     gl.useProgram(renderProgram);
     p0.bind(0, renderProgram.u_position);
@@ -109,3 +114,9 @@ function encode(x, y) {
         Math.floor(a * 255)
     ];
 }
+
+document.addEventListener('mousemove', function (evt) {
+    const x = evt.pageX / canvas.width * 2 - 1;
+    const y = evt.pageY / canvas.height * -2 + 1;
+    mouse = new Float32Array([x, y]);
+}, false);
