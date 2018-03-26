@@ -15,10 +15,10 @@ vec2 decode(vec4 data) {
 }
 
 void main() {
-    vec2 position = decode(texture2D(u_position, a_index / u_statesize));
-    vec2 displacement = decode(texture2D(u_displacement, a_index)) * 2.0 - 1.0;
+    vec2 position = decode(texture2D(u_position, a_index / u_statesize)) * 2.0 - 1.0;
+    vec2 displacement = decode(texture2D(u_displacement, a_index / u_statesize)) * 2.0 - 1.0;
     // displacement /= 1.0;
     position += displacement;
-    gl_Position = vec4(position * 2.0 - 1.0, 0.0, 1.0);
+    gl_Position = vec4(position, 0.0, 1.0);
     gl_PointSize = 2.0;
 }
