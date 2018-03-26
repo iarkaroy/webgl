@@ -25,8 +25,8 @@ void main() {
     vec2 position = decode(texture2D(u_position, v_index)) * 2.0 - 1.0;
     vec2 displacement = decode(texture2D(u_displacement, v_index)) * 2.0 - 1.0;
     float dist = distance(position, u_mouse);
-    if(dist < 0.1) {
-        displacement = normalize(position - u_mouse) / 10.0;
+    if(dist <= 0.1) {
+        displacement = normalize(position - u_mouse) * (0.1 - dist);
     } else {
         displacement *= 0.95;
     }
