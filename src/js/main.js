@@ -13,11 +13,11 @@ resize();
 var updateProgram = util.program(gl, 'quad.vs', 'update.fs');
 var renderProgram = util.program(gl, 'render.vs', 'render.fs');
 
-var width = 10,
-    height = 10;
+var numParticles = 10000;
+var statesize = Math.ceil(Math.sqrt(numParticles));
 
 var positions = [];
-for (var i = 0; i < width * height; ++i) {
+for (var i = 0; i < statesize * statesize; ++i) {
     positions = positions.concat(encode(
         Math.floor(Math.random() * window.innerWidth),
         Math.floor(Math.random() * window.innerHeight)
@@ -25,7 +25,7 @@ for (var i = 0; i < width * height; ++i) {
 }
 
 var displacements = [];
-for (var i = 0; i < width * height; ++i) {
+for (var i = 0; i < statesize * statesize; ++i) {
     displacements.push(
         Math.floor(Math.random() * 256),
         Math.floor(Math.random() * 256),
@@ -34,16 +34,18 @@ for (var i = 0; i < width * height; ++i) {
     );
 }
 
-var p0 = util.texture(gl, width, height, new Uint8Array(positions));
-var d0 = util.texture(gl, width, height, new Uint8Array(displacements));
-var d1 = util.texture(gl, width, height, null);
+var p0 = util.texture(gl, statesize, statesize, new Uint8Array(positions));
+var d0 = util.texture(gl, statesize, statesize, new Uint8Array(displacements));
+var d1 = util.texture(gl, statesize, statesize, null);
 
-var indexes = new Float32Array(width * height * 2);
-for (var y = 0; y < height; y++) {
-    for (var x = 0; x < width; x++) {
-        var i = y * width * 2 + x * 2;
-        indexes[i + 0] = x;
-        indexes[i + 1] = y;
+var indexes = new Float32Array(numParticles * 2);
+for (var y = 0; y < statesize; y++) {
+    for (var x = 0; x < statesize; x++) {
+        var i = y * statesize * 2 + x * 2;
+        if (i < numParticles * 2) {
+            indexes[i + 0] = x;
+            indexes[i + 1] = y;
+        }
     }
 }
 
@@ -59,7 +61,7 @@ function loop() {
     d0.bind(0, updateProgram.u_displacement);
     buffer.data(QUAD, updateProgram.a_quad, 2);
     fbo.bind(d1);
-    gl.viewport(0, 0, width, height);
+    gl.viewport(0, 0, statesize, statesize);
     clear();
     gl.drawArrays(gl.TRIANGLE_STRIP, 0, QUAD.length / 2);
 
@@ -71,11 +73,11 @@ function loop() {
     p0.bind(0, renderProgram.u_position);
     d1.bind(1, renderProgram.u_displacement);
     buffer.data(indexes, renderProgram.a_index, 2)
-    gl.uniform2fv(renderProgram.u_statesize, new Float32Array([width, height]));
+    gl.uniform2fv(renderProgram.u_statesize, new Float32Array([statesize, statesize]));
     fbo.unbind();
     gl.viewport(0, 0, canvas.width, canvas.height);
     clear();
-    gl.drawArrays(gl.POINTS, 0, width * height);
+    gl.drawArrays(gl.POINTS, 0, numParticles);
 
     var tmp = d0;
     d0 = d1;
