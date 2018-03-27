@@ -10,24 +10,37 @@ var canvas = document.getElementById("canvas");
 var gl = util.getWebGLContext(canvas);
 resize();
 
-var updateProgram = util.program(gl, 'quad.vs', 'update.fs');
+var positionProgram = util.program(gl, 'quad.vs', 'update-position.fs');
+var velocityProgram = util.program(gl, 'quad.vs', 'update-velocity.fs');
 var renderProgram = util.program(gl, 'render.vs', 'render.fs');
 
-var numParticles = 20000;
+var numParticles = 10000;
 var statesize = Math.ceil(Math.sqrt(numParticles));
-var mouse = new Float32Array([-1, -1]);
+var mouse = new Float32Array([-2, -2]);
 
-var positions = [];
+var originalPositions = [];
+var offsetX = (canvas.width - statesize) / 2;
+var offsetY = (canvas.height - statesize) / 2;
+for (var i = 0; i < statesize; ++i) {
+    for (var j = 0; j < statesize; ++j) {
+        originalPositions = originalPositions.concat(encode(
+            i + offsetX,
+            j + offsetY
+        ));
+    }
+}
+
+var currentPositions = [];
 for (var i = 0; i < statesize * statesize; ++i) {
-    positions = positions.concat(encode(
+    currentPositions = currentPositions.concat(encode(
         Math.floor(Math.random() * window.innerWidth),
         Math.floor(Math.random() * window.innerHeight)
     ))
 }
 
-var displacements = [];
+var velocity = [];
 for (var i = 0; i < statesize * statesize; ++i) {
-    displacements.push(
+    velocity.push(
         Math.floor(Math.random() * 256),
         Math.floor(Math.random() * 256),
         Math.floor(Math.random() * 256),
@@ -35,9 +48,11 @@ for (var i = 0; i < statesize * statesize; ++i) {
     );
 }
 
-var p0 = util.texture(gl, statesize, statesize, new Uint8Array(positions));
-var d0 = util.texture(gl, statesize, statesize, new Uint8Array(displacements));
-var d1 = util.texture(gl, statesize, statesize, null);
+var op = util.texture(gl, statesize, statesize, new Uint8Array(originalPositions));
+var cp0 = util.texture(gl, statesize, statesize, new Uint8Array(currentPositions));
+var cp1 = util.texture(gl, statesize, statesize, null);
+var v0 = util.texture(gl, statesize, statesize, new Uint8Array(velocity));
+var v1 = util.texture(gl, statesize, statesize, null);
 
 var indexes = new Float32Array(numParticles * 2);
 for (var y = 0; y < statesize; y++) {
@@ -58,12 +73,24 @@ requestAnimationFrame(loop);
 function loop() {
     requestAnimationFrame(loop);
 
-    gl.useProgram(updateProgram);
-    p0.bind(0, updateProgram.u_position);
-    d0.bind(1, updateProgram.u_displacement);
-    buffer.data(QUAD, updateProgram.a_quad, 2);
-    gl.uniform2fv(updateProgram.u_mouse, mouse);
-    fbo.bind(d1);
+    gl.useProgram(positionProgram);
+    op.bind(0, positionProgram.u_org_position);
+    cp0.bind(1, positionProgram.u_cur_position);
+    v0.bind(2, positionProgram.u_velocity);
+    buffer.data(QUAD, positionProgram.a_quad, 2);
+    gl.uniform2fv(positionProgram.u_mouse, mouse);
+    fbo.bind(cp1);
+    gl.viewport(0, 0, statesize, statesize);
+    clear();
+    gl.drawArrays(gl.TRIANGLE_STRIP, 0, QUAD.length / 2);
+
+    gl.useProgram(velocityProgram);
+    op.bind(0, velocityProgram.u_org_position);
+    cp0.bind(1, velocityProgram.u_cur_position);
+    v0.bind(2, velocityProgram.u_velocity);
+    buffer.data(QUAD, velocityProgram.a_quad, 2);
+    gl.uniform2fv(velocityProgram.u_mouse, mouse);
+    fbo.bind(v1);
     gl.viewport(0, 0, statesize, statesize);
     clear();
     gl.drawArrays(gl.TRIANGLE_STRIP, 0, QUAD.length / 2);
@@ -75,8 +102,7 @@ function loop() {
     */
 
     gl.useProgram(renderProgram);
-    p0.bind(0, renderProgram.u_position);
-    d1.bind(1, renderProgram.u_displacement);
+    cp1.bind(0, renderProgram.u_position);
     buffer.data(indexes, renderProgram.a_index, 2)
     gl.uniform2fv(renderProgram.u_statesize, new Float32Array([statesize, statesize]));
     fbo.unbind();
@@ -84,9 +110,13 @@ function loop() {
     clear();
     gl.drawArrays(gl.POINTS, 0, numParticles);
 
-    var tmp = d0;
-    d0 = d1;
-    d1 = tmp;
+    var tmp = cp0;
+    cp0 = cp1;
+    cp1 = tmp;
+
+    tmp = v0;
+    v0 = v1;
+    v1 = tmp;
 }
 
 function resize() {
