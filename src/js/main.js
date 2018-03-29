@@ -14,7 +14,7 @@ var positionProgram = util.program(gl, 'quad.vs', 'update-position.fs');
 var velocityProgram = util.program(gl, 'quad.vs', 'update-velocity.fs');
 var renderProgram = util.program(gl, 'render.vs', 'render.fs');
 
-var numParticles = 10000;
+var numParticles = 10;
 var statesize = Math.ceil(Math.sqrt(numParticles));
 var mouse = new Float32Array([-2, -2]);
 
@@ -152,3 +152,23 @@ document.addEventListener('mousemove', function (evt) {
     const y = evt.pageY / canvas.height * -2 + 1;
     mouse = new Float32Array([x, y]);
 }, false);
+
+getTextPixels('Hello, there!');
+
+function getTextPixels(text) {
+    var cvs = document.createElement('canvas');
+    cvs.width = window.innerWidth;
+    cvs.height = window.innerHeight;
+    var ctx = cvs.getContext('2d');
+    // document.body.appendChild(cvs);
+    var fontSize = 120;
+    ctx.textBaseline = 'top';
+    ctx.font = `bold ${fontSize}px arial`;
+    ctx.fillText(text, 0, 0);
+    var metrics = ctx.measureText(text);
+    var width = Math.ceil(metrics.width);
+    var data = ctx.getImageData(0, 0, width, Math.ceil(fontSize * 1.2));
+    var tw = data.width,
+        th = data.height;
+    console.log(data);
+}
