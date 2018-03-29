@@ -1,74 +1,34 @@
 require('../scss/main.scss');
 
 import * as util from './util';
+import Pixel from './pixel';
 
 var document = window.document;
 
 const QUAD = new Float32Array([-1, -1, 1, -1, -1, 1, 1, 1]);
 
+var pixels = [];
+
 var canvas = document.getElementById("canvas");
 var gl = util.getWebGLContext(canvas);
-resize();
 
 var positionProgram = util.program(gl, 'quad.vs', 'update-position.fs');
 var velocityProgram = util.program(gl, 'quad.vs', 'update-velocity.fs');
 var renderProgram = util.program(gl, 'render.vs', 'render.fs');
 
-var numParticles = 10;
-var statesize = Math.ceil(Math.sqrt(numParticles));
+var numParticles, statesize;
 var mouse = new Float32Array([-2, -2]);
 
-var originalPositions = [];
-var offsetX = 200;
-var offsetY = 100;
-for (var i = 0; i < statesize; ++i) {
-    for (var j = 0; j < statesize; ++j) {
-        originalPositions = originalPositions.concat(encode(
-            i * 2 + offsetX,
-            j * 2 + offsetY
-        ));
-    }
-}
+var originalPositions = [], currentPositions = [], velocity = [];
 
-var currentPositions = [];
-for (var i = 0; i < statesize * statesize; ++i) {
-    currentPositions = currentPositions.concat(encode(
-        Math.floor(Math.random() * window.innerWidth),
-        Math.floor(Math.random() * window.innerHeight)
-    ))
-}
+var op, cp0, cp1, v0, v1;
 
-var velocity = [];
-for (var i = 0; i < statesize * statesize; ++i) {
-    velocity.push(
-        Math.floor(Math.random() * 256),
-        Math.floor(Math.random() * 256),
-        Math.floor(Math.random() * 256),
-        Math.floor(Math.random() * 256)
-    );
-}
+var indexes;
 
-var op = util.texture(gl, statesize, statesize, new Uint8Array(originalPositions));
-var cp0 = util.texture(gl, statesize, statesize, new Uint8Array(currentPositions));
-var cp1 = util.texture(gl, statesize, statesize, null);
-var v0 = util.texture(gl, statesize, statesize, new Uint8Array(velocity));
-var v1 = util.texture(gl, statesize, statesize, null);
-
-var indexes = new Float32Array(numParticles * 2);
-for (var y = 0; y < statesize; y++) {
-    for (var x = 0; x < statesize; x++) {
-        var i = y * statesize * 2 + x * 2;
-        if (i < numParticles * 2) {
-            indexes[i + 0] = x;
-            indexes[i + 1] = y;
-        }
-    }
-}
+resize();
 
 var fbo = util.framebuffer(gl);
 var buffer = util.buffer(gl);
-
-requestAnimationFrame(loop);
 
 function loop() {
     requestAnimationFrame(loop);
@@ -124,6 +84,7 @@ function loop() {
 function resize() {
     canvas.width = window.innerWidth;
     canvas.height = window.innerHeight;
+    getTextPixels('Hello, there!');
 }
 
 function clear() {
@@ -153,8 +114,6 @@ document.addEventListener('mousemove', function (evt) {
     mouse = new Float32Array([x, y]);
 }, false);
 
-getTextPixels('Hello, there!');
-
 function getTextPixels(text) {
     var cvs = document.createElement('canvas');
     cvs.width = window.innerWidth;
@@ -170,5 +129,68 @@ function getTextPixels(text) {
     var data = ctx.getImageData(0, 0, width, Math.ceil(fontSize * 1.2));
     var tw = data.width,
         th = data.height;
-    console.log(data);
+    var buff = new Uint32Array(data.data.buffer);
+    for (var y = 0; y < th; y += 1) {
+        for (var x = 0; x < tw; x += 1) {
+            var index = y * tw + x;
+            if (buff[index] > 0) {
+                pixels.push(new Pixel(x, y, buff[index]));
+            }
+        }
+    }
+    setup(tw, th);
+}
+
+function setup(textWidth, textHeight) {
+    numParticles = pixels.length;
+    statesize = Math.ceil(Math.sqrt(numParticles));
+
+    originalPositions = [];
+    for (var i = 0; i < statesize * statesize; ++i) {
+        var x = pixels[i] ? pixels[i].x : 0;
+        var y = pixels[i] ? pixels[i].y : 0;
+        var offsetX = (canvas.width - textWidth) / 2;
+        var offsetY = (canvas.height - textHeight) / 2;
+        originalPositions = originalPositions.concat(encode(
+            x + offsetX,
+            y + offsetY
+        ));
+    }
+
+    currentPositions = [];
+    for (var i = 0; i < statesize * statesize; ++i) {
+        currentPositions = currentPositions.concat(encode(
+            Math.floor(Math.random() * window.innerWidth),
+            Math.floor(Math.random() * window.innerHeight)
+        ));
+    }
+
+    velocity = [];
+    for (var i = 0; i < statesize * statesize; ++i) {
+        velocity.push(
+            Math.floor(Math.random() * 256),
+            Math.floor(Math.random() * 256),
+            Math.floor(Math.random() * 256),
+            Math.floor(Math.random() * 256)
+        );
+    }
+
+    op = util.texture(gl, statesize, statesize, new Uint8Array(originalPositions));
+    cp0 = util.texture(gl, statesize, statesize, new Uint8Array(currentPositions));
+    cp1 = util.texture(gl, statesize, statesize, null);
+    v0 = util.texture(gl, statesize, statesize, new Uint8Array(velocity));
+    v1 = util.texture(gl, statesize, statesize, null);
+
+    indexes = new Float32Array(numParticles * 2);
+    for (var y = 0; y < statesize; y++) {
+        for (var x = 0; x < statesize; x++) {
+            var i = y * statesize * 2 + x * 2;
+            if (i < numParticles * 2) {
+                indexes[i + 0] = x;
+                indexes[i + 1] = y;
+            }
+        }
+    }
+
+    requestAnimationFrame(loop);
 }
