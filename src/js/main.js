@@ -1,5 +1,6 @@
 require('../scss/main.scss');
 
+import { mat4 } from 'gl-matrix';
 import * as util from './util';
 import Pixel from './pixel';
 
@@ -29,6 +30,12 @@ resize();
 
 var fbo = util.framebuffer(gl);
 var buffer = util.buffer(gl);
+
+var modelview = mat4.create();
+var projection = mat4.create();
+
+mat4.perspective(projection, 45, canvas.width / canvas.height, 0.1, 100.0);
+mat4.lookAt(modelview, [0, 0, 2], [0, 0, 0], [0, 1, 0]);
 
 function loop() {
     requestAnimationFrame(loop);
@@ -67,6 +74,8 @@ function loop() {
     cp1.bind(0, renderProgram.u_position);
     buffer.data(indexes, renderProgram.a_index, 2)
     gl.uniform2fv(renderProgram.u_statesize, new Float32Array([statesize, statesize]));
+    gl.uniformMatrix4fv(renderProgram.u_modelview, false, modelview);
+    gl.uniformMatrix4fv(renderProgram.u_projection, false, projection);
     fbo.unbind();
     gl.viewport(0, 0, canvas.width, canvas.height);
     clear();
@@ -84,7 +93,7 @@ function loop() {
 function resize() {
     canvas.width = window.innerWidth;
     canvas.height = window.innerHeight;
-    getTextPixels('Hello, there!');
+    getTextPixels('Fg');
 }
 
 function clear() {
@@ -93,6 +102,7 @@ function clear() {
 }
 
 function encode(x, y) {
+    x *= canvas.width / canvas.height;
     var px = x / window.innerWidth;
     y = window.innerHeight - y;
     var py = y / window.innerHeight;
@@ -149,7 +159,7 @@ function setup(textWidth, textHeight) {
     for (var i = 0; i < statesize * statesize; ++i) {
         var x = pixels[i] ? pixels[i].x : 0;
         var y = pixels[i] ? pixels[i].y : 0;
-        var offsetX = (canvas.width - textWidth) / 2;
+        var offsetX = (canvas.width - textWidth) / 1;
         var offsetY = (canvas.height - textHeight) / 2;
         originalPositions = originalPositions.concat(encode(
             x + offsetX,
@@ -160,18 +170,18 @@ function setup(textWidth, textHeight) {
     currentPositions = [];
     for (var i = 0; i < statesize * statesize; ++i) {
         currentPositions = currentPositions.concat(encode(
-            Math.floor(Math.random() * window.innerWidth),
-            Math.floor(Math.random() * window.innerHeight)
+            Math.floor(canvas.width / 2),
+            Math.floor(canvas.height / 2)
         ));
     }
 
     velocity = [];
     for (var i = 0; i < statesize * statesize; ++i) {
         velocity.push(
-            Math.floor(Math.random() * 256),
-            Math.floor(Math.random() * 256),
-            Math.floor(Math.random() * 256),
-            Math.floor(Math.random() * 256)
+            Math.floor(128),
+            Math.floor(128),
+            Math.floor(128),
+            Math.floor(128)
         );
     }
 
