@@ -6,6 +6,7 @@ uniform sampler2D u_org_position;
 uniform sampler2D u_cur_position;
 uniform sampler2D u_velocity;
 uniform vec2 u_mouse;
+uniform vec2 u_worldsize;
 varying vec2 v_index;
 
 vec2 decode(vec4 data) {
@@ -36,6 +37,7 @@ void main() {
         mouse_force = min(0.002 / (mouse_dist * mouse_dist), 0.002);
         mouse_angle = atan(c_position.y - u_mouse.y, c_position.x - u_mouse.x);
     }
+    float aspect = u_worldsize.x / u_worldsize.y;
     velocity.x += force * cos(angle) + mouse_force * cos(mouse_angle);
     velocity.y += force * sin(angle) + mouse_force * sin(mouse_angle);
     velocity *= 0.92;

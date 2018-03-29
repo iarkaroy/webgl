@@ -19,13 +19,13 @@ var statesize = Math.ceil(Math.sqrt(numParticles));
 var mouse = new Float32Array([-2, -2]);
 
 var originalPositions = [];
-var offsetX = (canvas.width - statesize) / 2;
-var offsetY = (canvas.height - statesize) / 2;
+var offsetX = 200;
+var offsetY = 100;
 for (var i = 0; i < statesize; ++i) {
     for (var j = 0; j < statesize; ++j) {
         originalPositions = originalPositions.concat(encode(
-            i + offsetX,
-            j + offsetY
+            i * 2 + offsetX,
+            j * 2 + offsetY
         ));
     }
 }
@@ -79,6 +79,7 @@ function loop() {
     v0.bind(2, positionProgram.u_velocity);
     buffer.data(QUAD, positionProgram.a_quad, 2);
     gl.uniform2fv(positionProgram.u_mouse, mouse);
+    gl.uniform2fv(positionProgram.u_worldsize, new Float32Array([canvas.width, canvas.height]));
     fbo.bind(cp1);
     gl.viewport(0, 0, statesize, statesize);
     clear();
@@ -90,6 +91,7 @@ function loop() {
     v0.bind(2, velocityProgram.u_velocity);
     buffer.data(QUAD, velocityProgram.a_quad, 2);
     gl.uniform2fv(velocityProgram.u_mouse, mouse);
+    gl.uniform2fv(velocityProgram.u_worldsize, new Float32Array([canvas.width, canvas.height]));
     fbo.bind(v1);
     gl.viewport(0, 0, statesize, statesize);
     clear();
