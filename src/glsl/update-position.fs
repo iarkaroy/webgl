@@ -34,7 +34,7 @@ void main() {
     float mouse_angle = 0.0;
     if(u_mouse.x > -2. && u_mouse.y > -2.) {
         float mouse_dist = distance(c_position, u_mouse);
-        mouse_force = min(0.002 / (mouse_dist * mouse_dist), 0.002);
+        mouse_force = min(0.001 / (mouse_dist * mouse_dist), 0.001);
         mouse_angle = atan(c_position.y - u_mouse.y, c_position.x - u_mouse.x);
     }
     float aspect = u_worldsize.x / u_worldsize.y;

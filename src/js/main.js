@@ -1,6 +1,5 @@
 require('../scss/main.scss');
 
-import { mat4 } from 'gl-matrix';
 import * as util from './util';
 import Pixel from './pixel';
 
@@ -30,12 +29,6 @@ resize();
 
 var fbo = util.framebuffer(gl);
 var buffer = util.buffer(gl);
-
-var modelview = mat4.create();
-var projection = mat4.create();
-
-mat4.perspective(projection, 45, canvas.width / canvas.height, 0.1, 100.0);
-mat4.lookAt(modelview, [0, 0, 2], [0, 0, 0], [0, 1, 0]);
 
 function loop() {
     requestAnimationFrame(loop);
@@ -74,8 +67,7 @@ function loop() {
     cp1.bind(0, renderProgram.u_position);
     buffer.data(indexes, renderProgram.a_index, 2)
     gl.uniform2fv(renderProgram.u_statesize, new Float32Array([statesize, statesize]));
-    gl.uniformMatrix4fv(renderProgram.u_modelview, false, modelview);
-    gl.uniformMatrix4fv(renderProgram.u_projection, false, projection);
+    gl.uniform2fv(renderProgram.u_worldsize, new Float32Array([canvas.width, canvas.height]));
     fbo.unbind();
     gl.viewport(0, 0, canvas.width, canvas.height);
     clear();
@@ -93,7 +85,7 @@ function loop() {
 function resize() {
     canvas.width = window.innerWidth;
     canvas.height = window.innerHeight;
-    getTextPixels('Fg');
+    getTextPixels('Hello, there!');
 }
 
 function clear() {
@@ -102,10 +94,12 @@ function clear() {
 }
 
 function encode(x, y) {
-    x *= canvas.width / canvas.height;
-    var px = x / window.innerWidth;
-    y = window.innerHeight - y;
-    var py = y / window.innerHeight;
+    var cw = canvas.width;
+    var ch = canvas.height;
+    var px = x / cw;
+    y /= cw / ch;
+    y = ch - y;
+    var py = y / ch;
     var r = (px * 255) - Math.floor(px * 255);
     var b = Math.floor(px * 255) / 255;
     var g = (py * 255) - Math.floor(py * 255);
@@ -129,8 +123,8 @@ function getTextPixels(text) {
     cvs.width = window.innerWidth;
     cvs.height = window.innerHeight;
     var ctx = cvs.getContext('2d');
-    // document.body.appendChild(cvs);
-    var fontSize = 120;
+    var fontSize = Math.floor(window.innerWidth / 8);
+    if (fontSize > 120) fontSize = 120;
     ctx.textBaseline = 'top';
     ctx.font = `bold ${fontSize}px arial`;
     ctx.fillText(text, 0, 0);
@@ -152,15 +146,22 @@ function getTextPixels(text) {
 }
 
 function setup(textWidth, textHeight) {
+
+    var t0 = performance.now();
+
     numParticles = pixels.length;
     statesize = Math.ceil(Math.sqrt(numParticles));
+    var statesize2 = statesize * statesize;
+
+    var cw = canvas.width;
+    var ch = canvas.height;
+    var offsetX = (canvas.width - textWidth) / 2;
+    var offsetY = (canvas.width - textHeight) / 2;
 
     originalPositions = [];
-    for (var i = 0; i < statesize * statesize; ++i) {
+    for (var i = 0; i < statesize2; ++i) {
         var x = pixels[i] ? pixels[i].x : 0;
         var y = pixels[i] ? pixels[i].y : 0;
-        var offsetX = (canvas.width - textWidth) / 1;
-        var offsetY = (canvas.height - textHeight) / 2;
         originalPositions = originalPositions.concat(encode(
             x + offsetX,
             y + offsetY
@@ -168,15 +169,15 @@ function setup(textWidth, textHeight) {
     }
 
     currentPositions = [];
-    for (var i = 0; i < statesize * statesize; ++i) {
+    for (var i = 0; i < statesize2; ++i) {
         currentPositions = currentPositions.concat(encode(
-            Math.floor(canvas.width / 2),
-            Math.floor(canvas.height / 2)
+            Math.floor(Math.random() * cw),
+            Math.floor(Math.random() * cw)
         ));
     }
 
     velocity = [];
-    for (var i = 0; i < statesize * statesize; ++i) {
+    for (var i = 0; i < statesize2; ++i) {
         velocity.push(
             Math.floor(128),
             Math.floor(128),
@@ -201,6 +202,9 @@ function setup(textWidth, textHeight) {
             }
         }
     }
+
+    var t1 = performance.now();
+    console.log(t1 - t0, 'ms');
 
     requestAnimationFrame(loop);
 }
