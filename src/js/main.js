@@ -25,10 +25,10 @@ var op, cp0, cp1, v0, v1;
 
 var indexes;
 
-resize();
-
 var fbo = util.framebuffer(gl);
 var buffer = util.buffer(gl);
+
+resize();
 
 function loop() {
     requestAnimationFrame(loop);
@@ -85,7 +85,7 @@ function loop() {
 function resize() {
     canvas.width = window.innerWidth;
     canvas.height = window.innerHeight;
-    getTextPixels('Hello, there!');
+    getTextPixels('.');
 }
 
 function clear() {
@@ -168,7 +168,36 @@ function setup(textWidth, textHeight) {
         ));
     }
 
+    /*
+    for (var i = 0; i < statesize2; ++i) {
+        var x = pixels[i] ? pixels[i].x : 0;
+        var y = pixels[i] ? pixels[i].y : 0;
+        originalPositions.push(
+            x + offsetX,
+            y + offsetY
+        );
+    }
+    console.log(originalPositions);
+    */
+
     var t1 = performance.now();
+
+    /*
+    op = util.texture(gl, statesize, statesize, null);
+
+    var initProgram = util.program(gl, 'init.vs', 'init.fs');
+    gl.useProgram(initProgram);
+    buffer.data(QUAD, initProgram.a_quad, 2);
+    buffer.data(new Float32Array(originalPositions), initProgram.a_position, 2);
+    gl.uniform2fv(initProgram.u_worldsize, new Float32Array([canvas.width, canvas.height]));
+    fbo.bind(op);
+    gl.viewport(0, 0, statesize, statesize);
+    clear();
+    gl.drawArrays(gl.TRIANGLE_STRIP, 0, QUAD.length / 2);
+    var pxs = new Uint8Array(statesize * statesize * 4);
+    gl.readPixels(0, 0, statesize, statesize, gl.RGBA, gl.UNSIGNED_BYTE, pxs);
+    console.log(pxs);
+    */
 
     currentPositions = [];
     for (var i = 0; i < statesize2; ++i) {
