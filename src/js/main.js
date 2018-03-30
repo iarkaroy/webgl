@@ -168,6 +168,8 @@ function setup(textWidth, textHeight) {
         ));
     }
 
+    var t1 = performance.now();
+
     currentPositions = [];
     for (var i = 0; i < statesize2; ++i) {
         currentPositions = currentPositions.concat(encode(
@@ -175,6 +177,8 @@ function setup(textWidth, textHeight) {
             Math.floor(Math.random() * cw)
         ));
     }
+
+    var t2 = performance.now();
 
     velocity = [];
     for (var i = 0; i < statesize2; ++i) {
@@ -185,6 +189,8 @@ function setup(textWidth, textHeight) {
             Math.floor(128)
         );
     }
+
+    var t3 = performance.now();
 
     op = util.texture(gl, statesize, statesize, new Uint8Array(originalPositions));
     cp0 = util.texture(gl, statesize, statesize, new Uint8Array(currentPositions));
@@ -203,8 +209,12 @@ function setup(textWidth, textHeight) {
         }
     }
 
-    var t1 = performance.now();
-    console.log(t1 - t0, 'ms');
+    var t4 = performance.now();
+    console.log('originalPositions', t1 - t0);
+    console.log('currentPositions', t2 - t1);
+    console.log('velocity', t3 - t2);
+    console.log('indexes', t4 - t3);
+    console.log('total', t4 - t0);
 
     requestAnimationFrame(loop);
 }
