@@ -15,13 +15,14 @@ var gl = util.getWebGLContext(canvas);
 var positionProgram = util.program(gl, 'quad.vs', 'update-position.fs');
 var velocityProgram = util.program(gl, 'quad.vs', 'update-velocity.fs');
 var renderProgram = util.program(gl, 'render.vs', 'render.fs');
+var screenProgram = util.program(gl, 'quad.vs', 'screen.fs');
 
 var numParticles, statesize;
 var mouse = new Float32Array([-2, -2]);
 
 var originalPositions = [], currentPositions = [], velocity = [];
 
-var op, cp0, cp1, v0, v1;
+var op, cp0, cp1, v0, v1, screenTexture, backgroundTexture;
 
 var indexes;
 
@@ -63,17 +64,32 @@ function loop() {
     console.log(pixels);
     */
 
+    
+    fbo.bind(screenTexture);
+    clear();
+    gl.useProgram(screenProgram);
+    backgroundTexture.bind(0, screenProgram.u_screen);
+    buffer.data(QUAD, screenProgram.a_quad, 2);
+    gl.viewport(0, 0, canvas.width, canvas.height);
+    gl.drawArrays(gl.TRIANGLE_STRIP, 0, QUAD.length / 2);
+    
     gl.useProgram(renderProgram);
     cp1.bind(0, renderProgram.u_position);
     buffer.data(indexes, renderProgram.a_index, 2)
     gl.uniform2fv(renderProgram.u_statesize, new Float32Array([statesize, statesize]));
     gl.uniform2fv(renderProgram.u_worldsize, new Float32Array([canvas.width, canvas.height]));
+    gl.viewport(0, 0, canvas.width, canvas.height);
+    gl.drawArrays(gl.POINTS, 0, numParticles);
+
+    gl.useProgram(screenProgram);
+    screenTexture.bind(0, screenProgram.u_screen);
+    buffer.data(QUAD, screenProgram.a_quad, 2);
     fbo.unbind();
     gl.viewport(0, 0, canvas.width, canvas.height);
     clear();
     gl.enable(gl.BLEND);
     gl.blendFunc(gl.SRC_ALPHA, gl.ONE_MINUS_SRC_ALPHA);
-    gl.drawArrays(gl.POINTS, 0, numParticles);
+    gl.drawArrays(gl.TRIANGLE_STRIP, 0, QUAD.length / 2);
     gl.disable(gl.BLEND);
 
     var tmp = cp0;
@@ -83,6 +99,10 @@ function loop() {
     tmp = v0;
     v0 = v1;
     v1 = tmp;
+
+    tmp = screenTexture;
+    screenTexture = backgroundTexture;
+    backgroundTexture = tmp;
 }
 
 function resize() {
@@ -120,6 +140,8 @@ document.addEventListener('mousemove', function (evt) {
     const y = evt.pageY / canvas.height * -2 + 1;
     mouse = new Float32Array([x, y]);
 }, false);
+
+window.addEventListener('resize', resize, false);
 
 function getTextPixels(text) {
     var cvs = document.createElement('canvas');
@@ -202,6 +224,8 @@ function setup(textWidth, textHeight) {
     cp1 = util.texture(gl, statesize, statesize, null);
     v0 = util.texture(gl, statesize, statesize, new Uint8Array(velocity));
     v1 = util.texture(gl, statesize, statesize, null);
+    screenTexture = util.texture(gl, cw, ch, new Uint8Array(cw * ch * 4));
+    backgroundTexture = util.texture(gl, cw, ch, new Uint8Array(cw * ch * 4));
 
     indexes = new Float32Array(numParticles * 2);
     for (var y = 0; y < statesize; y++) {
