@@ -71,7 +71,10 @@ function loop() {
     fbo.unbind();
     gl.viewport(0, 0, canvas.width, canvas.height);
     clear();
+    gl.enable(gl.BLEND);
+    gl.blendFunc(gl.SRC_ALPHA, gl.ONE_MINUS_SRC_ALPHA);
     gl.drawArrays(gl.POINTS, 0, numParticles);
+    gl.disable(gl.BLEND);
 
     var tmp = cp0;
     cp0 = cp1;
