@@ -11,6 +11,10 @@ var pixels = [];
 
 var canvas = document.getElementById("canvas");
 var gl = util.getWebGLContext(canvas);
+gl.getExtension('OES_texture_float');
+gl.getExtension('GL_OES_standard_derivatives');
+gl.getExtension('OES_standard_derivatives');
+gl.getExtension('EXT_shader_texture_lod');
 
 var positionProgram = util.program(gl, 'quad.vs', 'update-position.fs');
 var velocityProgram = util.program(gl, 'quad.vs', 'update-velocity.fs');
@@ -79,7 +83,11 @@ function loop() {
     gl.uniform2fv(renderProgram.u_statesize, new Float32Array([statesize, statesize]));
     gl.uniform2fv(renderProgram.u_worldsize, new Float32Array([canvas.width, canvas.height]));
     gl.viewport(0, 0, canvas.width, canvas.height);
+    gl.enable(gl.DEPTH_TEST);
+    gl.blendFunc(gl.SRC_COLOR, gl.DST_COLOR);
+    gl.enable(gl.BLEND);
     gl.drawArrays(gl.POINTS, 0, numParticles);
+    gl.disable(gl.BLEND);
 
     gl.useProgram(screenProgram);
     screenTexture.bind(0, screenProgram.u_screen);
@@ -108,7 +116,9 @@ function loop() {
 function resize() {
     canvas.width = window.innerWidth;
     canvas.height = window.innerHeight;
-    getTextPixels('Hello!');
+    setTimeout(() => {
+        getTextPixels('Hello!');
+    }, 0);
 }
 
 function clear() {
