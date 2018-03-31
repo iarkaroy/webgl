@@ -23,7 +23,11 @@ WebGLFramebuffer.prototype.unbind = function () {
 };
 
 export function getWebGLContext(canvas) {
-    var gl = canvas.getContext("webgl") || canvas.getContext("experimental-webgl");
+    var param = {
+        alpha:true,
+        antialias: true
+    };
+    var gl = canvas.getContext("webgl", param) || canvas.getContext("experimental-webgl", param);
     if (!gl) {
         console.log("WebGL not supported");
     }
