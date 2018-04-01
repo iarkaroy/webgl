@@ -27,14 +27,14 @@ void main() {
     vec2 o_position = decode(texture2D(u_org_position, v_index)) * 2.0 - 1.0;
     vec2 c_position = decode(texture2D(u_cur_position, v_index)) * 2.0 - 1.0;
     float dist = distance(o_position, c_position);
-    float force = dist * 0.01;
+    float force = dist * 0.005;
     float angle = atan(o_position.y - c_position.y, o_position.x - c_position.x);
     vec2 velocity = decode(texture2D(u_velocity, v_index)) * 2.0 - 1.0;
     float mouse_force = 0.0;
     float mouse_angle = 0.0;
     if(u_mouse.x > -2. && u_mouse.y > -2.) {
         float mouse_dist = distance(c_position, u_mouse);
-        mouse_force = min(0.001 / (mouse_dist * mouse_dist), 0.001);
+        mouse_force = min(0.0001 / mouse_dist, 0.001);
         mouse_angle = atan(c_position.y - u_mouse.y, c_position.x - u_mouse.x);
     }
     float aspect = u_worldsize.x / u_worldsize.y;
