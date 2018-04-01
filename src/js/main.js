@@ -74,6 +74,7 @@ function loop() {
     gl.useProgram(screenProgram);
     backgroundTexture.bind(0, screenProgram.u_screen);
     buffer.data(QUAD, screenProgram.a_quad, 2);
+    gl.uniform1f(screenProgram.u_opacity, 0.8);
     gl.viewport(0, 0, canvas.width, canvas.height);
     gl.drawArrays(gl.TRIANGLE_STRIP, 0, QUAD.length / 2);
     
@@ -92,6 +93,7 @@ function loop() {
     gl.useProgram(screenProgram);
     screenTexture.bind(0, screenProgram.u_screen);
     buffer.data(QUAD, screenProgram.a_quad, 2);
+    gl.uniform1f(screenProgram.u_opacity, 1.0);
     fbo.unbind();
     gl.viewport(0, 0, canvas.width, canvas.height);
     clear();
