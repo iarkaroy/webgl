@@ -14,5 +14,5 @@ void main() {
         alpha = 1.0 - smoothstep(1.0 - delta, 1.0 + delta, r);
     #endif
     */
-    gl_FragColor = vec4(0.0,0.8,1.0,1.0) * alpha;
+    gl_FragColor = vec4(1.0,1.0,1.0,1.0) * alpha;
 }
